@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Touch Events</title>
+  <meta name="description" content="Testing multi-device touch/mouse">
+  <meta name="author" content="Justin">
+
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
+  <link rel="stylesheet" href="main.css" />
+
+</head>
+
+<article class="events-test">
+<div id="outputarea"></div>
+<div id="foo">
+  <div id="sq"></div>
+</div>
+</article>
+
+
+<body>
+  
+
+
+<script language="JavaScript">
+var dragStart = null;
+document.getElementById('foo').onmousedown = function(e) {
+  var rect = e.target.getBoundingClientRect();
+  var x = e.clientX - rect.left; 
+  var y = e.clientY - rect.top;
+  dragStart = { x, y };
+};
+
+document.getElementById('foo').onmouseup = function(e) {
+  if(dragStart) {
+    var rect = e.target.getBoundingClientRect();
+    var x = e.clientX - rect.left; 
+    var y = e.clientY - rect.top;
+    logger('drag end', (x - dragStart.x), (y - dragStart.y));
+  }  
+  dragStart = null;
+};
+
+document.getElementById('foo').onmouseout = function(e) {
+  dragStart = null;
+};
+
+document.getElementById('foo').onmousemove = function(e) {
+  if(!dragStart) return;
+  
+  var rect = e.target.getBoundingClientRect();
+  var x = e.clientX - rect.left; 
+  var y = e.clientY - rect.top;
+  var xDiff = (x - dragStart.x);
+  var yDiff = (y - dragStart.y);
+  if(xDiff < 3 && yDiff < 3) return;
+  const ele = document.getElementById('sq');
+  ele.style.left = dragStart.x + 'px';
+  ele.style.top = dragStart.y + 'px';
+  
+  ele.style.width = xDiff + 'px';
+  ele.style.height = yDiff + 'px';
+  console.log('sdf', dragStart)
+  
+}
+
+function logger(str, ...others) {
+  str = str + ' ' + (others || []).join(' ')
+  document.getElementById('outputarea').innerHTML += str + "<br/>";
+}
+
+
+
+</script>
+
+</body>
+</html>
+
+
