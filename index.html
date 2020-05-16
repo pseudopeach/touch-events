@@ -66,7 +66,56 @@ document.getElementById('foo').onmousemove = function(e) {
   ele.style.height = yDiff + 'px';
   console.log('sdf', dragStart)
   
-}
+};
+
+document.getElementById('foo').onclick = function(e) {
+  var rect = e.target.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+  logger('click', x, y);
+};
+
+document.getElementById('foo').ontouchstart = function(e) {
+  var rect = e.target.getBoundingClientRect();
+  e.preventDefault();
+  logger('touch start', e.touches.length);
+};
+
+document.getElementById('foo').addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+
+    var rect = e.target.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    logger('right click', x, y);
+
+}, false);
+
+document.getElementById('foo').onmousewheel = function(e) {
+  var rect = e.target.getBoundingClientRect();
+  e.preventDefault();
+  logger('wheel');
+};
+
+document.getElementById('foo').addEventListener('wheel', (e) => {
+    e.preventDefault();
+
+    logger('wheel');
+
+}, false);
+
+
+document.getElementById('foo').ontouchmove = function(e) {
+  e.preventDefault();
+};
+
+document.getElementById('foo').ontouchend = function(e) {
+  var rect = e.target.getBoundingClientRect();
+  e.preventDefault();
+  logger('touch start', e.touches.length);
+};
+
+
 
 function logger(str, ...others) {
   str = str + ' ' + (others || []).join(' ')
