@@ -187,6 +187,8 @@ function handleTouchMove(e) {
   else if(currentInteraction.mode === MODES.UNDETERMINED)
     currentInteraction.repeats = 1;
 
+  logger('touchmove', currentInteraction)
+
   const readyForTransition = currentInteraction
       && currentInteraction.mode === MODES.UNDETERMINED
       && currentInteraction.repeats >= 3;
