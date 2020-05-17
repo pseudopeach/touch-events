@@ -240,7 +240,7 @@ function isReadyForTransition(e, currentInteraction) {
     if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 8)
       return true;
   }
-  logger('returning falsey', e.touches.length, currentInteraction.start.length);
+  logger('returning falsey', e.touches.length, currentInteraction.start[0]);
   return false;
 }
 
