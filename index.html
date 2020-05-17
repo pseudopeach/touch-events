@@ -27,59 +27,221 @@
 
 
 <script language="JavaScript">
-var dragStart = null;
-document.getElementById('foo').onmousedown = function(e) {
-  var rect = e.target.getBoundingClientRect();
-  var x = e.clientX - rect.left; 
-  var y = e.clientY - rect.top;
-  dragStart = { x, y };
+let currentInteraction = null;
+
+const MODES = {
+  ZOOM: 'zoom',
+  SCROLL: 'scroll',
+  SELECT: 'select',
+  UNDETERMINED: 'undetermined',
 };
 
-document.getElementById('foo').onmouseup = function(e) {
-  if(dragStart) {
-    var rect = e.target.getBoundingClientRect();
-    var x = e.clientX - rect.left; 
-    var y = e.clientY - rect.top;
-    logger('drag end', (x - dragStart.x), (y - dragStart.y));
-  }  
-  dragStart = null;
-};
+function processClick(p, e) {
+  logger('clickf', p, !!e.ctrlKey, !!e.shiftKey);
+  console.log('fffff', !!e.shiftKey)
+}
 
-document.getElementById('foo').onmouseout = function(e) {
-  dragStart = null;
-};
+function processMouseDrag(e, interaction) {
+  const rightButton = !!(e.button && e.buttons === 2);
+  logger('mouse select', interaction.start[0], processPointEvent(e), rightButton ? 'right' : '');
+}
 
-document.getElementById('foo').onmousemove = function(e) {
-  if(!dragStart) return;
-  
-  var rect = e.target.getBoundingClientRect();
-  var x = e.clientX - rect.left; 
-  var y = e.clientY - rect.top;
-  var xDiff = (x - dragStart.x);
-  var yDiff = (y - dragStart.y);
-  if(xDiff < 3 && yDiff < 3) return;
-  const ele = document.getElementById('sq');
-  ele.style.left = dragStart.x + 'px';
-  ele.style.top = dragStart.y + 'px';
-  
-  ele.style.width = xDiff + 'px';
-  ele.style.height = yDiff + 'px';
-  console.log('sdf', dragStart)
-  
-};
+function processMouseHover(p) {
+  // logger('hover', p);
+}
 
-document.getElementById('foo').onclick = function(e) {
-  var rect = e.target.getBoundingClientRect();
-  var x = e.clientX - rect.left;
-  var y = e.clientY - rect.top;
-  logger('click', x, y);
-};
+function processTouchSelect(e, interaction) {
+  logger('touch select');
+}
 
-document.getElementById('foo').ontouchstart = function(e) {
-  var rect = e.target.getBoundingClientRect();
+function processTouchZoom(e, interaction) {
+  logger('touch zoom');
+}
+
+function processTouchScroll(e, interaction) {
+  logger('touch zoom');
+}
+
+function processTap(pArray) {
+  if(pArray.length === 1)
+    logger('click (tap)', p[0]);
+  else if (pArray.length === 2)
+    logger('two finger tap', p[0]);
+}
+
+function processTouch(e) {
+  return e.touches.map(t => processPointEvent(t))
+}
+
+function processPointEvent(e) {
+  const rect = e.target.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    ident: e.identifier || 0,
+    buttons: e.buttons || 0,
+  };
+}
+
+function handleMouseDown(e) {
   e.preventDefault();
-  logger('touch start', e.touches.length);
-};
+
+  if(!currentInteraction)
+    currentInteraction = {
+      mode: MODES.UNDETERMINED,
+      repeats: 1,
+      start: [processPointEvent(e)],
+      touchCount: 1,
+    };
+  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === 1)
+    currentInteraction.repeats++;
+  else if(currentInteraction.mode === MODES.UNDETERMINED)
+    currentInteraction.repeats = 1;
+
+}
+
+function handleMouseUp(e) {
+  e.preventDefault();
+  if(!currentInteraction) return;
+
+  if(currentInteraction.mode === MODES.UNDETERMINED) {
+    processClick(currentInteraction.start[0], e);
+  }
+
+  currentInteraction = null;
+}
+
+function handleMouseMove(e) {
+  e.preventDefault();
+
+  if(!currentInteraction) {
+    processMouseHover(processPointEvent(e));
+    return;
+  }
+
+  if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === 1)
+    currentInteraction.repeats++;
+  else if(currentInteraction.mode === MODES.UNDETERMINED)
+    currentInteraction.repeats = 1;
+
+  const readyForTransition = isReadyForTransition(e, currentInteraction);
+  // console.log('mv int', readyForTransition, currentInteraction)
+
+  if(readyForTransition)
+    currentInteraction.mode = MODES.SELECT;
+  if(currentInteraction.mode === MODES.SELECT)
+    processMouseDrag(e, currentInteraction);
+
+  console.log('int', currentInteraction, e)
+}
+
+function handleMouseOut(e) {
+  e.preventDefault();
+  currentInteraction = null;
+}
+
+function handleMouseWheel(e) {
+  console.log('wheel', e);
+  logger('wheel');
+}
+
+function handleTouchStart(e) {
+  e.preventDefault();
+
+  if(!currentInteraction)
+    currentInteraction = {
+      mode: MODES.UNDETERMINED,
+      repeats: 1,
+      start: processTouch(e),
+      touchCount: e.touches.length,
+    };
+  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === e.touches.length)
+    currentInteraction.repeats++;
+  else if(currentInteraction.mode === MODES.UNDETERMINED)
+    currentInteraction.repeats = 1;
+}
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  if(!currentInteraction) return;
+
+  if(currentInteraction.mode === MODES.UNDETERMINED) {
+    processTap(currentInteraction.start);
+  }
+
+  currentInteraction = null;
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+
+  if(!currentInteraction)
+    currentInteraction = {
+      mode: MODES.UNDETERMINED,
+      repeats: 1,
+      start: processTouch(e),
+      touchCount: e.touches.length,
+    };
+  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === e.touches.length)
+    currentInteraction.repeats++;
+  else if(currentInteraction.mode === MODES.UNDETERMINED)
+    currentInteraction.repeats = 1;
+
+  const readyForTransition = currentInteraction
+      && currentInteraction.mode === MODES.UNDETERMINED
+      && currentInteraction.repeats >= 3;
+
+  switch (e.touches.length) {
+    case 3:
+      if(readyForTransition)
+        currentInteraction.mode = MODES.SELECT;
+      if(currentInteraction.mode === MODES.SELECT)
+        processTouchSelect(e, currentInteraction);
+
+      break;
+
+    case 2:
+      if(readyForTransition)
+        currentInteraction.mode = MODES.ZOOM;
+      if(currentInteraction.mode === MODES.ZOOM)
+        processTouchZoom(e, currentInteraction);
+
+      break;
+
+    case 1:
+      if(readyForTransition)
+        currentInteraction.mode = MODES.SCROLL;
+      if(currentInteraction.mode === MODES.SCROLL)
+        processTouchScroll(e, currentInteraction);
+
+      break;
+  }
+}
+
+function handleTouchCancel(e) {
+  e.preventDefault();
+  currentInteraction = null;
+}
+
+function isReadyForTransition(e, currentInteraction) {
+  if(currentInteraction.mode !== MODES.UNDETERMINED) return false;
+
+  if(e.hasOwnProperty('touches')) {
+    return currentInteraction.repeats >= 3;
+  } else {
+    const p = processPointEvent(e);
+    if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 8)
+      return true;
+  }
+
+  return false;
+}
+
+document.getElementById('foo').onmousedown = handleMouseDown;
+document.getElementById('foo').onmouseup = handleMouseUp;
+document.getElementById('foo').onmouseout = handleMouseOut;
+document.getElementById('foo').onmousemove = handleMouseMove;
+document.getElementById('foo').ontouchstart = handleTouchStart;
 
 document.getElementById('foo').addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -91,36 +253,30 @@ document.getElementById('foo').addEventListener('contextmenu', (e) => {
 
 }, false);
 
-document.getElementById('foo').onmousewheel = function(e) {
-  var rect = e.target.getBoundingClientRect();
-  e.preventDefault();
-  logger('wheel');
-};
-
-document.getElementById('foo').addEventListener('wheel', (e) => {
-    e.preventDefault();
-
-    logger('wheel');
-
-}, false);
-
-
-document.getElementById('foo').ontouchmove = function(e) {
-  e.preventDefault();
-};
-
-document.getElementById('foo').ontouchend = function(e) {
-  var rect = e.target.getBoundingClientRect();
-  e.preventDefault();
-  logger('touch start', e.touches.length);
-};
-
+document.getElementById('foo').onmousewheel = handleMouseWheel;
+document.getElementById('foo').addEventListener('wheel', handleMouseWheel);
+document.getElementById('foo').ontouchmove = handleTouchMove;
+document.getElementById('foo').ontouchend = handleTouchEnd;
 
 
 function logger(str, ...others) {
-  str = str + ' ' + (others || []).join(' ')
+  console.log('looger', others.length)
+  if(others) {
+    for(let o of others) {
+      if(o.toString() !== '[object Object]')
+        str += ' ' + o.toString();
+      else {
+        for(let k in o) {
+          str += ' ' + k + ':' + o[k];
+        }
+      }
+    }
+  }
   document.getElementById('outputarea').innerHTML += str + "<br/>";
 }
+
+
+
 
 
 
