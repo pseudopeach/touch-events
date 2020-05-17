@@ -190,14 +190,12 @@ function handleTouchMove(e) {
   else if(currentInteraction.mode === MODES.UNDETERMINED)
     currentInteraction.repeats = 1;
 
-  const readyForTransition = currentInteraction
-      && currentInteraction.mode === MODES.UNDETERMINED
-      && currentInteraction.repeats >= 3;
+  const readyForTransition = isReadyForTransition(e, currentInteraction);
 
   switch (e.touches.length) {
     case 3:
       if(readyForTransition)
-        currentInteraction.mode = MODES.SELECT;
+        currentInteraction = convertMode(currentInteraction, e, MODES.SELECT);
       if(currentInteraction.mode === MODES.SELECT)
         processTouchSelect(e, currentInteraction);
 
@@ -205,7 +203,7 @@ function handleTouchMove(e) {
 
     case 2:
       if(readyForTransition)
-        currentInteraction.mode = MODES.ZOOM;
+        currentInteraction = convertMode(currentInteraction, e, MODES.ZOOM);
       if(currentInteraction.mode === MODES.ZOOM)
         processTouchZoom(e, currentInteraction);
 
@@ -213,7 +211,7 @@ function handleTouchMove(e) {
 
     case 1:
       if(readyForTransition)
-        currentInteraction.mode = MODES.SCROLL;
+        currentInteraction = convertMode(currentInteraction, e, MODES.SCROLL);
       if(currentInteraction.mode === MODES.SCROLL)
         processTouchScroll(e, currentInteraction);
 
@@ -230,7 +228,13 @@ function isReadyForTransition(e, currentInteraction) {
   if(currentInteraction.mode !== MODES.UNDETERMINED) return false;
 
   if(e.hasOwnProperty('touches')) {
-    return currentInteraction.repeats >= 3;
+    for(let i=0; i<e.touches.length; i++) {
+      const refPt = currentInteraction.start[i];
+      const p = processPointEvent(e.touches.item(i));
+      if(!refPt) continue;
+      if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 8)
+        return true;
+    }
   } else {
     const p = processPointEvent(e);
     if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 8)
@@ -238,6 +242,24 @@ function isReadyForTransition(e, currentInteraction) {
   }
 
   return false;
+}
+
+function convertMode(currentInteraction, e, newMode) {
+  logger('convert mode', newMode)
+  let result = Object.assign({}, {
+    mode: newMode,
+    repeats: currentInteraction.repeats,
+    start: [],
+    touchCount: e.touches.length,
+  });
+  for(let i=0; i<e.touches.length; i++) {
+    if(i < currentInteraction.start.length)
+      result.start.push(currentInteraction.start[i]);
+    else
+      result.start.push(processPointEvent(e.touches.item(i)));
+  }
+
+  return result;
 }
 
 document.getElementById('foo').onmousedown = handleMouseDown;
