@@ -64,9 +64,9 @@ function processTouchScroll(e, interaction) {
 
 function processTap(pArray) {
   if(pArray.length === 1)
-    logger('click (tap)', p[0]);
+    logger('click (tap)', pArray[0]);
   else if (pArray.length === 2)
-    logger('two finger tap', p[0]);
+    logger('two finger tap', pArray[0]);
 }
 
 function processTouch(e) {
