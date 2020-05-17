@@ -37,7 +37,7 @@ const MODES = {
 };
 
 function processClick(p, e) {
-  logger('clickf', p, !!e.ctrlKey, !!e.shiftKey);
+  logger('click', p, !!e.ctrlKey, !!e.shiftKey);
   console.log('fffff', !!e.shiftKey)
 }
 
@@ -70,7 +70,10 @@ function processTap(pArray) {
 }
 
 function processTouch(e) {
-  return e.touches.map(t => processPointEvent(t))
+  let items = [];
+  for(let i=0; i<e.touches.length; i++)
+    items.push(processPointEvent(e.touches.item(i)));
+  return items;
 }
 
 function processPointEvent(e) {
@@ -187,8 +190,6 @@ function handleTouchMove(e) {
   else if(currentInteraction.mode === MODES.UNDETERMINED)
     currentInteraction.repeats = 1;
 
-  logger('touchmove', currentInteraction)
-
   const readyForTransition = currentInteraction
       && currentInteraction.mode === MODES.UNDETERMINED
       && currentInteraction.repeats >= 3;
@@ -244,6 +245,8 @@ document.getElementById('foo').onmouseup = handleMouseUp;
 document.getElementById('foo').onmouseout = handleMouseOut;
 document.getElementById('foo').onmousemove = handleMouseMove;
 document.getElementById('foo').ontouchstart = handleTouchStart;
+document.getElementById('foo').ontouchmove = handleTouchMove;
+document.getElementById('foo').ontouchend = handleTouchEnd;
 
 document.getElementById('foo').addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -257,12 +260,10 @@ document.getElementById('foo').addEventListener('contextmenu', (e) => {
 
 document.getElementById('foo').onmousewheel = handleMouseWheel;
 document.getElementById('foo').addEventListener('wheel', handleMouseWheel);
-document.getElementById('foo').ontouchmove = handleTouchMove;
-document.getElementById('foo').ontouchend = handleTouchEnd;
+
 
 
 function logger(str, ...others) {
-  console.log('looger', others.length)
   if(others) {
     for(let o of others) {
       if(o.toString() !== '[object Object]')
