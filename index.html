@@ -241,7 +241,10 @@ function isReadyForTransition(e, currentInteraction) {
     for(let i=0; i<e.touches.length; i++) {
       const refPt = currentInteraction.start[e.touches.item(i).identifier];
       const p = processPointEvent(e.touches.item(i));
-      if(!refPt) continue;
+      if(!refPt) {
+        logger('fucked', e.touches.item(i).identifier, Object.keys(currentInteraction.start))
+        continue;
+      }
       if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 16)
         return true;
     }
