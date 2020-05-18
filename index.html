@@ -68,9 +68,9 @@ function processTouchScroll(e, interaction) {
 
 function processTap(e, interaction) {
   if(interaction.maxTouchCount === 1)
-    logger('click (tap)', interaction.start[0]);
+    logger('click (tap)');
   else if (interaction.maxTouchCount === 2 || e.touches.length === 2)
-    logger('two finger tap', interaction.start[0]);
+    logger('two finger tap');
   else
     logger('mix length', interaction.maxTouchCount, e.touches.length)
 }
@@ -98,7 +98,7 @@ function handleMouseDown(e) {
   if(!currentInteraction)
     currentInteraction = {
       mode: MODES.UNDETERMINED,
-      start: [processPointEvent(e)],
+      start:{ 0: processPointEvent(e) },
       maxTouchCount: 1,
     };
 
@@ -239,15 +239,15 @@ function isReadyForTransition(e, currentInteraction) {
 
   if(e.touches) {
     for(let i=0; i<e.touches.length; i++) {
-      const refPt = currentInteraction.start[i];
+      const refPt = currentInteraction.start[e.touches.item(i).identifier];
       const p = processPointEvent(e.touches.item(i));
       if(!refPt) continue;
-      if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 8)
+      if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 16)
         return true;
     }
   } else {
     const p = processPointEvent(e);
-    if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 24)
+    if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 10)
       return true;
   }
 
@@ -258,14 +258,14 @@ function convertMode(currentInteraction, e, newMode) {
   logger('convert mode', newMode)
   let result = Object.assign({}, {
     mode: newMode,
-    start: [],
+    start: {},
     maxTouchCount: Math.max(currentInteraction.maxTouchCount, e.touches.length),
   });
   for(let i=0; i<e.touches.length; i++) {
-    if(i < currentInteraction.start.length)
-      result.start.push(currentInteraction.start[i]);
+    if(currentInteraction.start[e.touches.item(i).identifier])
+      result.start[e.touches.item(i).identifier] = currentInteraction.start[e.touches.item(i).identifier];
     else
-      result.start.push(processPointEvent(e.touches.item(i)));
+      result.start[e.touches.item(i).identifier] = processPointEvent(e.touches.item(i));
   }
 
   return result;
