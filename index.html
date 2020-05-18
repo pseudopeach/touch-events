@@ -63,12 +63,12 @@ function processTouchScroll(e, interaction) {
 }
 
 function processTap(e, interaction) {
-  if(interaction.start.length === 1 && e.touches.length === 1)
-    logger('click (tap)', pArray[0]);
-  else if (interaction.start.length === 2 || e.touches.length === 2)
-    logger('two finger tap', pArray[0]);
+  if(interaction.maxTouchCount === 1)
+    logger('click (tap)', interaction.start[0]);
+  else if (interaction.maxTouchCount === 2 || e.touches.length === 2)
+    logger('two finger tap', interaction.start[0]);
   else
-    logger('mix length', interaction.start.length, e.touches.length)
+    logger('mix length', interaction.maxTouchCount, e.touches.length)
 }
 
 function processTouch(e) {
@@ -94,14 +94,9 @@ function handleMouseDown(e) {
   if(!currentInteraction)
     currentInteraction = {
       mode: MODES.UNDETERMINED,
-      repeats: 1,
       start: [processPointEvent(e)],
-      touchCount: 1,
+      maxTouchCount: 1,
     };
-  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === 1)
-    currentInteraction.repeats++;
-  else if(currentInteraction.mode === MODES.UNDETERMINED)
-    currentInteraction.repeats = 1;
 
 }
 
@@ -123,11 +118,6 @@ function handleMouseMove(e) {
     processMouseHover(processPointEvent(e));
     return;
   }
-
-  if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === 1)
-    currentInteraction.repeats++;
-  else if(currentInteraction.mode === MODES.UNDETERMINED)
-    currentInteraction.repeats = 1;
 
   const readyForTransition = isReadyForTransition(e, currentInteraction);
   // console.log('mv int', readyForTransition, currentInteraction)
@@ -156,14 +146,9 @@ function handleTouchStart(e) {
   if(!currentInteraction)
     currentInteraction = {
       mode: MODES.UNDETERMINED,
-      repeats: 1,
       start: processTouch(e),
-      touchCount: e.touches.length,
+      maxTouchCount: e.touches.length,
     };
-  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === e.touches.length)
-    currentInteraction.repeats++;
-  else if(currentInteraction.mode === MODES.UNDETERMINED)
-    currentInteraction.repeats = 1;
 }
 
 function handleTouchEnd(e) {
@@ -183,16 +168,13 @@ function handleTouchMove(e) {
   if(!currentInteraction)
     currentInteraction = {
       mode: MODES.UNDETERMINED,
-      repeats: 1,
       start: processTouch(e),
-      touchCount: e.touches.length,
+      maxTouchCount: e.touches.length,
     };
-  else if(currentInteraction.mode === MODES.UNDETERMINED && currentInteraction.touchCount === e.touches.length)
-    currentInteraction.repeats++;
-  else if(currentInteraction.mode === MODES.UNDETERMINED)
-    currentInteraction.repeats = 1;
 
   const readyForTransition = isReadyForTransition(e, currentInteraction);
+
+  if(e.touches.length > currentInteraction.maxTouchCount) currentInteraction.maxTouchCount = e.touches.length;
 
   switch (e.touches.length) {
     case 3:
@@ -250,9 +232,8 @@ function convertMode(currentInteraction, e, newMode) {
   logger('convert mode', newMode)
   let result = Object.assign({}, {
     mode: newMode,
-    repeats: currentInteraction.repeats,
     start: [],
-    touchCount: e.touches.length,
+    maxTouchCount: Math.max(currentInteraction.maxTouchCount, e.touches.length),
   });
   for(let i=0; i<e.touches.length; i++) {
     if(i < currentInteraction.start.length)
