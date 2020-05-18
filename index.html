@@ -245,6 +245,7 @@ function isReadyForTransition(e, currentInteraction) {
         logger('fucked', e.touches.item(i).identifier, Object.keys(currentInteraction.start))
         continue;
       }
+      logger('**** refPt', refPt)
       if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 16)
         return true;
     }
