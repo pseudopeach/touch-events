@@ -76,9 +76,9 @@ function processTap(e, interaction) {
 }
 
 function processTouch(e) {
-  let items = [];
+  let items = {};
   for(let i=0; i<e.touches.length; i++)
-    items.push(processPointEvent(e.touches.item(i)));
+    items[e.touches.item(i).identifier] = processPointEvent(e.touches.item(i));
   return items;
 }
 
@@ -241,11 +241,7 @@ function isReadyForTransition(e, currentInteraction) {
     for(let i=0; i<e.touches.length; i++) {
       const refPt = currentInteraction.start[e.touches.item(i).identifier];
       const p = processPointEvent(e.touches.item(i));
-      if(!refPt) {
-        logger('fucked', e.touches.item(i).identifier, Object.keys(currentInteraction.start))
-        continue;
-      }
-      logger('**** refPt', refPt)
+      if(!refPt) continue;
       if(Math.abs(refPt.x - p.x) + Math.abs(refPt.y - p.y) > 16)
         return true;
     }
