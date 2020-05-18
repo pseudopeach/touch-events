@@ -50,6 +50,10 @@ function processMouseHover(p) {
   // logger('hover', p);
 }
 
+function processArrow(direction) {
+  logger('arrow', direction);
+}
+
 function processTouchSelect(e, interaction) {
   logger('touch select');
 }
@@ -140,6 +144,28 @@ function handleMouseWheel(e) {
   logger('wheel');
 }
 
+function handleKeyPress(e) {
+  if(e.keyCode >= 37 && e.keyCode <= 40) e.preventDefault();
+  switch (e.keyCode) {
+    case 37:
+      processArrow('left');
+      break;
+    case 38:
+      processArrow('up');
+      break;
+    case 39:
+      processArrow('right');
+      break;
+    case 40:
+      processArrow('down');
+      break;
+  }
+}
+
+function handleDoubleClick(e) {
+  logger('double-click');
+}
+
 function handleTouchStart(e) {
   e.preventDefault();
 
@@ -220,7 +246,7 @@ function isReadyForTransition(e, currentInteraction) {
     }
   } else {
     const p = processPointEvent(e);
-    if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 12)
+    if(Math.abs(p.x - currentInteraction.start[0].x) + Math.abs(p.y - currentInteraction.start[0].y) > 16)
       return true;
   }
 
@@ -248,6 +274,8 @@ document.getElementById('foo').onmousedown = handleMouseDown;
 document.getElementById('foo').onmouseup = handleMouseUp;
 document.getElementById('foo').onmouseout = handleMouseOut;
 document.getElementById('foo').onmousemove = handleMouseMove;
+document.getElementById('foo').ondblclick = handleDoubleClick;
+document.addEventListener('keydown', handleKeyPress);
 document.getElementById('foo').ontouchstart = handleTouchStart;
 document.getElementById('foo').ontouchmove = handleTouchMove;
 document.getElementById('foo').ontouchend = handleTouchEnd;
