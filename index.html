@@ -178,6 +178,7 @@ function handleTouchEnd(e) {
 
   if(currentInteraction.mode === MODES.UNDETERMINED) {
     processTap(e, currentInteraction);
+    currentInteraction = null;
   }
 
   if(e.touches.length === 0)
