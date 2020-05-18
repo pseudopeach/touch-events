@@ -173,7 +173,6 @@ function handleTouchStart(e) {
 }
 
 function handleTouchEnd(e) {
-  logger('touchend', e.touches.length)
   e.preventDefault();
   if(!currentInteraction) return;
 
@@ -181,7 +180,8 @@ function handleTouchEnd(e) {
     processTap(e, currentInteraction);
   }
 
-  currentInteraction = null;
+  if(e.touches.length === 0)
+    currentInteraction = null;
 }
 
 function handleTouchMove(e) {
