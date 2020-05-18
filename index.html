@@ -62,11 +62,13 @@ function processTouchScroll(e, interaction) {
   logger('touch scroll');
 }
 
-function processTap(e, pArray) {
-  if(pArray.length === 1 && e.touches.length === 1)
+function processTap(e, interaction) {
+  if(interaction.start.length === 1 && e.touches.length === 1)
     logger('click (tap)', pArray[0]);
-  else if (pArray.length === 2 || e.touches.length === 2)
+  else if (interaction.start.length === 2 || e.touches.length === 2)
     logger('two finger tap', pArray[0]);
+  else
+    logger('mix length', interaction.start.length, e.touches.length)
 }
 
 function processTouch(e) {
