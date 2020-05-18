@@ -142,7 +142,7 @@ function handleMouseWheel(e) {
 
 function handleTouchStart(e) {
   e.preventDefault();
-
+  logger('touch start', e.touches.length)
   if(!currentInteraction)
     currentInteraction = {
       mode: MODES.UNDETERMINED,
